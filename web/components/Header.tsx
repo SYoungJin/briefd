@@ -35,8 +35,14 @@ export function Header({ onGenerateNewsletter, newsletterLoading }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sector, userId: "00000000-0000-0000-0000-000000000000" })
       });
-      if (!res.ok) throw new Error();
-      const data = (await res.json()) as { newCount: number };
+      const data = (await res.json().catch(() => ({}))) as {
+        newCount?: number;
+        failedFeeds?: string[];
+        message?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.message ?? "업데이트 실패");
+      }
       setState("success");
       setTimeout(() => setState("cooldown"), 1500);
       let left = 30;
@@ -50,11 +56,15 @@ export function Header({ onGenerateNewsletter, newsletterLoading }: Props) {
         }
       }, 1000);
       router.refresh();
-      alert(`새 콘텐츠 ${data.newCount}개를 가져왔어요`);
-    } catch {
+      const failed = data.failedFeeds?.length ?? 0;
+      alert(
+        `새 콘텐츠 ${data.newCount ?? 0}개를 가져왔어요${failed > 0 ? ` (실패한 소스 ${failed}개)` : ""}`
+      );
+    } catch (error) {
       setState("error");
       setTimeout(() => setState("idle"), 1500);
-      alert("업데이트에 실패했어요. 다시 시도해주세요");
+      const message = error instanceof Error ? error.message : "업데이트에 실패했어요. 다시 시도해주세요";
+      alert(message);
     }
   }
 
