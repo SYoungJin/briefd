@@ -20,14 +20,36 @@ const parser: Parser<unknown, CustomItem> = new Parser({
   }
 });
 
-function inferResearchCategory(title: string): string {
+function inferResearchCategory(title: string, source = ""): string {
   const t = title.toLowerCase();
-  if (t.includes("hci")) return "HCI";
-  if (t.includes("accessibility") || t.includes("a11y")) return "접근성";
-  if (t.includes("interaction")) return "인터랙션";
-  if (t.includes("design system") || t.includes("design-system")) return "디자인시스템";
-  if (t.includes("cognitive") || t.includes("cognition") || t.includes("perception")) return "인지과학";
-  return "AI·ML";
+  const s = source.toLowerCase();
+
+  if (
+    s.includes("service design") ||
+    s.includes("touchpoint") ||
+    s.includes("practical service") ||
+    /\b(service design|service-design|service blueprint|service ecosystem|servicescape)\b/.test(t)
+  ) {
+    return "서비스디자인";
+  }
+
+  if (/\b(accessibility|a11y|wcag|inclusive design|assistive)\b/.test(t)) {
+    return "접근성";
+  }
+
+  if (/\b(design system|design-system|design tokens|component library)\b/.test(t)) {
+    return "디자인시스템";
+  }
+
+  if (/\b(cognitive|cognition|perception|attention|memory|workload|usability)\b/.test(t)) {
+    return "인지과학";
+  }
+
+  if (/\b(interaction|input|gesture|haptic|gaze|voice ui|conversational)\b/.test(t)) {
+    return "인터랙션";
+  }
+
+  return "HCI";
 }
 
 function extractThumbnail(item: Parser.Item & CustomItem): string | null {
@@ -67,7 +89,7 @@ async function fetchFeedSafely(feedUrl: string): Promise<ParsedItem[]> {
         thumbnail: extractThumbnail(item as Parser.Item & CustomItem),
         published_at: item.pubDate ?? new Date().toISOString(),
         sector: "research",
-        category: inferResearchCategory(item.title ?? "")
+        category: inferResearchCategory(item.title ?? "", feed.title ?? "")
       }));
   } catch (error) {
     console.error("[crawl-research] feed failed", feedUrl, error);

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, RefreshCw, Settings, BookMarked, Menu, X as IconX } from "lucide-react";
+import { Check, CircleUser, Menu, RefreshCw, Settings, X as IconX } from "lucide-react";
 import { useSectorStore } from "@/store/sectorStore";
 import { SECTOR_LABEL } from "@/lib/constants";
 import { todayLabel } from "@/lib/time";
@@ -110,7 +110,7 @@ export function Header({ onGenerateNewsletter, newsletterLoading }: Props) {
           <Settings size={20} />
         </Link>
         <Link href="/mypage" className="iconBtn" aria-label="My page" title="My page">
-          <BookMarked size={20} />
+          <CircleUser size={20} />
         </Link>
       </div>
 
@@ -146,7 +146,7 @@ export function Header({ onGenerateNewsletter, newsletterLoading }: Props) {
             <span>{newsletterLoading ? "뉴스레터 작성 중..." : "뉴스레터 만들기"}</span>
           </button>
           <Link href="/mypage" className="drawerItem" onClick={() => setMenuOpen(false)}>
-            <BookMarked size={18} />
+            <CircleUser size={18} />
             <span>My page</span>
           </Link>
           <Link href="/settings" className="drawerItem" onClick={() => setMenuOpen(false)}>

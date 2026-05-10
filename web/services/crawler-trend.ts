@@ -20,13 +20,44 @@ const parser: Parser<unknown, CustomItem> = new Parser({
   }
 });
 
-function inferCategory(title: string): string {
+function inferCategory(title: string, source = ""): string {
   const t = title.toLowerCase();
-  if (t.includes("mobility") || t.includes("vehicle") || t.includes("car ") || t.includes("ev ")) return "모빌리티";
-  if (t.includes("robot") || t.includes("ai ") || t.includes("artificial") || t.includes("genai")) return "AI·로봇";
-  if (t.includes("iot") || t.includes("smart home") || t.includes("smart device")) return "IoT";
-  if (t.includes("exhibition") || t.includes("event") || t.includes("conference") || t.includes("expo")) return "전시·이벤트";
-  if (t.includes("design") || t.includes("brand") || t.includes("typography")) return "디자인";
+  const s = source.toLowerCase();
+
+  if (
+    s.includes("electrek") ||
+    s.includes("inside ev") ||
+    s.includes("the drive") ||
+    /\btransportation\b/.test(s) ||
+    /\b(ev|electric vehicle|vehicle|automotive|autonomous|self-?driving|car|robotaxi|adas|mobility)\b/.test(t)
+  ) {
+    return "모빌리티";
+  }
+
+  if (
+    /\b(ces ?\d{0,4}|mwc ?\d{0,4}|ifa ?\d{0,4}|sxsw|computex|maison&objet|milan design week|salone)\b/.test(t) ||
+    /\b(exhibition|expo|conference|keynote|reveal|unveil|launch event|trade show)\b/.test(t)
+  ) {
+    return "전시·이벤트";
+  }
+
+  if (/\b(robot|robotic|robotics|llm|gpt|genai|generative ai|ai agent|copilot)\b/.test(t)) {
+    return "AI·로봇";
+  }
+
+  if (/\b(iot|smart ?home|smart ?device|wearable|matter protocol|connected device)\b/.test(t)) {
+    return "IoT";
+  }
+
+  if (
+    s.includes("dezeen") ||
+    s.includes("designboom") ||
+    s.includes("nice that") ||
+    /\b(typography|branding|industrial design|product design|graphic design|illustration)\b/.test(t)
+  ) {
+    return "디자인";
+  }
+
   return "UXUI";
 }
 
@@ -67,7 +98,7 @@ async function fetchFeedSafely(feedUrl: string): Promise<ParsedItem[]> {
         thumbnail: extractThumbnail(item as Parser.Item & CustomItem),
         published_at: item.pubDate ?? new Date().toISOString(),
         sector: "trend",
-        category: inferCategory(item.title ?? "")
+        category: inferCategory(item.title ?? "", feed.title ?? "")
       }));
   } catch (error) {
     console.error("[crawl-trend] feed failed", feedUrl, error);
