@@ -9,24 +9,11 @@ import { Header } from "@/components/Header";
 import { ArticleCard } from "./components/ArticleCard";
 import { ConceptCard } from "@/components/ConceptCard";
 
-const MOCK: Article[] = [
-  {
-    id: 1,
-    title: "AI 기반 모빌리티 인터페이스가 운전 경험을 재정의한다",
-    url: "https://example.com/1",
-    source: "TechCrunch",
-    thumbnail: null,
-    published_at: new Date().toISOString(),
-    sector: "trend",
-    category: "모빌리티",
-    summary: null
-  }
-];
-
 export default function Page() {
   const router = useRouter();
   const { sector } = useSectorStore();
-  const [articles, setArticles] = useState<Article[]>(MOCK);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string>("all");
   const [loadingById, setLoadingById] = useState<Record<number, boolean>>({});
   const [summaryVisibleById, setSummaryVisibleById] = useState<Record<number, boolean>>({});
@@ -44,15 +31,22 @@ export default function Page() {
   );
 
   useEffect(() => {
+    let cancelled = false;
     async function load() {
-      const res = await fetch(`/api/articles?sector=${sector}`);
-      if (!res.ok) return;
-      const data = (await res.json()) as { articles: Article[] };
-      if (data.articles.length > 0) {
-        setArticles(data.articles);
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/articles?sector=${sector}`);
+        if (!res.ok) return;
+        const data = (await res.json()) as { articles: Article[] };
+        if (!cancelled) setArticles(data.articles);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
     load();
+    return () => {
+      cancelled = true;
+    };
   }, [sector]);
 
   async function handleSummarize(id: number) {
@@ -128,31 +122,45 @@ export default function Page() {
         </aside>
 
         <section className="feedArea">
-          {hero && (
-            <article className="heroCard" onClick={() => window.open(hero.url, "_blank", "noopener,noreferrer")}>
-              <div>
-                <span className="badge">{hero.category}</span>
-                <h2>{hero.title}</h2>
-                <p>{hero.source}</p>
-              </div>
-            </article>
-          )}
+          {loading && articles.length === 0 ? (
+            <div className="emptyState">
+              <p className="muted">콘텐츠를 불러오는 중이에요...</p>
+            </div>
+          ) : !hero ? (
+            <div className="emptyState">
+              <p>이 섹터에 표시할 기사가 없어요.</p>
+              <p className="muted">우측 상단의 새로고침 버튼으로 최신 기사를 가져오세요.</p>
+            </div>
+          ) : (
+            <>
+              <article className="heroCard" onClick={() => window.open(hero.url, "_blank", "noopener,noreferrer")}>
+                <div className="heroCardInner">
+                  <span className="heroEyebrow">오늘의 헤드라인</span>
+                  <span className="badge">{hero.category}</span>
+                  <h2>{hero.title}</h2>
+                  <p>{hero.source}</p>
+                </div>
+              </article>
 
-          <div className="feedGrid">
-            {list.map((item) => (
-              <ArticleCard
-                key={item.id}
-                article={item}
-                isLoading={Boolean(loadingById[item.id])}
-                summaryVisible={Boolean(summaryVisibleById[item.id])}
-                onToggleSummary={() =>
-                  setSummaryVisibleById((prev) => ({ ...prev, [item.id]: !prev[item.id] }))
-                }
-                onSummarize={() => handleSummarize(item.id)}
-                onExtractConcept={() => handleExtractConcept(item.title + "\n" + (item.summary ?? ""))}
-              />
-            ))}
-          </div>
+              <div className="feedGrid">
+                {list.map((item) => (
+                  <ArticleCard
+                    key={item.id}
+                    article={item}
+                    isLoading={Boolean(loadingById[item.id])}
+                    summaryVisible={Boolean(summaryVisibleById[item.id])}
+                    onToggleSummary={() =>
+                      setSummaryVisibleById((prev) => ({ ...prev, [item.id]: !prev[item.id] }))
+                    }
+                    onSummarize={() => handleSummarize(item.id)}
+                    onExtractConcept={() =>
+                      handleExtractConcept(item.title + "\n" + (item.summary ?? ""))
+                    }
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </section>
       </div>
 
@@ -177,17 +185,45 @@ export default function Page() {
       )}
 
       {concepts.length > 0 && (
-        <div className="conceptModal">
-          <button className="iconBtn" onClick={() => setConceptIndex((i) => Math.max(0, i - 1))}>
-            {"<"}
-          </button>
-          <ConceptCard item={concepts[conceptIndex]} onClose={() => setConcepts([])} />
-          <button
-            className="iconBtn"
-            onClick={() => setConceptIndex((i) => Math.min(concepts.length - 1, i + 1))}
-          >
-            {">"}
-          </button>
+        <div className="conceptModal" onClick={() => setConcepts([])}>
+          <div className="conceptModalInner" onClick={(e) => e.stopPropagation()}>
+            <div className="conceptNav">
+              <button
+                className="iconBtn"
+                onClick={() => setConceptIndex((i) => Math.max(0, i - 1))}
+                disabled={conceptIndex === 0}
+              >
+                ←
+              </button>
+              <span className="muted">
+                {conceptIndex + 1} / {concepts.length}
+              </span>
+              <button
+                className="iconBtn"
+                onClick={() => setConceptIndex((i) => Math.min(concepts.length - 1, i + 1))}
+                disabled={conceptIndex === concepts.length - 1}
+              >
+                →
+              </button>
+            </div>
+            <ConceptCard item={concepts[conceptIndex]} />
+            <div className="conceptModalActions">
+              <button
+                className="generateBtn"
+                onClick={async () => {
+                  const card = concepts[conceptIndex];
+                  await fetch("/api/concepts/save", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ card, sourceType: "article" })
+                  });
+                }}
+              >
+                My page 에 저장
+              </button>
+              <button className="foldBtn" onClick={() => setConcepts([])}>닫기</button>
+            </div>
+          </div>
         </div>
       )}
     </main>

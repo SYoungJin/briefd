@@ -1,5 +1,5 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { initScheduler } from "@/lib/scheduler";
 
 initScheduler();
@@ -7,6 +7,13 @@ initScheduler();
 export const metadata: Metadata = {
   title: "Briefd",
   description: "빠른 세상, 뒤처지지 않는 나"
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0C0C0F"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

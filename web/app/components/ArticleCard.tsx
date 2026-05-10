@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, ExternalLink, Bookmark } from "lucide-react";
 import { Article } from "@/lib/types";
 import { timeAgo } from "@/lib/time";
 
@@ -13,6 +13,21 @@ interface ArticleCardProps {
   onExtractConcept?: () => void;
 }
 
+function gradientFor(seed: string) {
+  const palette = [
+    ["#6366F1", "#8B5CF6"],
+    ["#EC4899", "#F59E0B"],
+    ["#10B981", "#3B82F6"],
+    ["#F43F5E", "#8B5CF6"],
+    ["#06B6D4", "#3B82F6"],
+    ["#FACC15", "#F97316"]
+  ];
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) hash = (hash << 5) - hash + seed.charCodeAt(i);
+  const [a, b] = palette[Math.abs(hash) % palette.length];
+  return `linear-gradient(135deg, ${a}, ${b})`;
+}
+
 export function ArticleCard({
   article,
   isLoading,
@@ -21,11 +36,25 @@ export function ArticleCard({
   onSummarize,
   onExtractConcept
 }: ArticleCardProps) {
+  const hasThumb = Boolean(article.thumbnail);
   return (
-    <article className="newsCard clickable" onClick={() => window.open(article.url, "_blank", "noopener,noreferrer")}>
-      <div className="thumb" style={article.thumbnail ? { backgroundImage: `url(${article.thumbnail})` } : undefined} />
+    <article
+      className="newsCard clickable"
+      onClick={() => window.open(article.url, "_blank", "noopener,noreferrer")}
+    >
+      {hasThumb ? (
+        <div className="thumb" style={{ backgroundImage: `url(${article.thumbnail})` }} />
+      ) : (
+        <div className="thumb thumbFallback" style={{ background: gradientFor(article.title) }}>
+          <div className="thumbInitial">{(article.source ?? "U").slice(0, 1).toUpperCase()}</div>
+        </div>
+      )}
+
       <div className="newsBody">
-        <span className="badge">{article.category}</span>
+        <div className="badgeRow">
+          <span className="badge">{article.category}</span>
+          <ExternalLink size={14} className="externalIcon" />
+        </div>
         <h3>{article.title}</h3>
 
         {summaryVisible && article.summary && (
@@ -56,7 +85,7 @@ export function ArticleCard({
                     요약 중...
                   </>
                 ) : (
-                  "✦ AI 요약 보기"
+                  "✦ AI 요약"
                 )}
               </button>
             ) : (
@@ -81,7 +110,13 @@ export function ArticleCard({
                 개념 추출
               </button>
             )}
-            <span className="externalIcon">↗</span>
+            <button
+              className="iconBtnSmall"
+              onClick={(e) => e.stopPropagation()}
+              aria-label="bookmark"
+            >
+              <Bookmark size={14} />
+            </button>
           </div>
         </div>
       </div>
