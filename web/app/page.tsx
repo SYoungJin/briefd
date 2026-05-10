@@ -32,6 +32,8 @@ export default function Page() {
   const [summaryVisibleById, setSummaryVisibleById] = useState<Record<number, boolean>>({});
   const [concepts, setConcepts] = useState<ConceptCardItem[]>([]);
   const [conceptIndex, setConceptIndex] = useState(0);
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterError, setNewsletterError] = useState<string | null>(null);
 
   const filtered = useMemo(
     () =>
@@ -69,14 +71,27 @@ export default function Page() {
   }
 
   async function handleGenerateNewsletter() {
-    const res = await fetch("/api/newsletter/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sector, userId: "00000000-0000-0000-0000-000000000000" })
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as { id: number };
-    router.push(`/newsletter/${data.id}`);
+    if (newsletterLoading) return;
+    setNewsletterError(null);
+    setNewsletterLoading(true);
+    try {
+      const res = await fetch("/api/newsletter/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sector, userId: "00000000-0000-0000-0000-000000000000" })
+      });
+      const data = (await res.json().catch(() => ({}))) as { id?: number; message?: string };
+      if (!res.ok || !data.id) {
+        setNewsletterError(data.message ?? "뉴스레터 생성에 실패했어요. 잠시 후 다시 시도해 주세요.");
+        return;
+      }
+      router.push(`/newsletter/${data.id}`);
+    } catch (error) {
+      console.error(error);
+      setNewsletterError("네트워크 오류로 뉴스레터를 만들 수 없어요.");
+    } finally {
+      setNewsletterLoading(false);
+    }
   }
 
   async function handleExtractConcept(sourceText: string) {
@@ -96,7 +111,7 @@ export default function Page() {
 
   return (
     <main className="briefdRoot">
-      <Header onGenerateNewsletter={handleGenerateNewsletter} />
+      <Header onGenerateNewsletter={handleGenerateNewsletter} newsletterLoading={newsletterLoading} />
 
       <div className="layout">
         <aside className="sidebar">
@@ -140,6 +155,26 @@ export default function Page() {
           </div>
         </section>
       </div>
+
+      {newsletterLoading && (
+        <div className="conceptModal">
+          <div className="loadingCard">
+            <h3>뉴스레터를 작성하고 있어요...</h3>
+            <p>최신 기사 10건을 분석해 약 20초 정도 걸려요.</p>
+            <div className="progressBar"><div className="progressFill" /></div>
+          </div>
+        </div>
+      )}
+
+      {newsletterError && !newsletterLoading && (
+        <div className="conceptModal" onClick={() => setNewsletterError(null)}>
+          <div className="loadingCard">
+            <h3>뉴스레터를 만들 수 없어요</h3>
+            <p className="muted">{newsletterError}</p>
+            <button className="generateBtn" onClick={() => setNewsletterError(null)}>닫기</button>
+          </div>
+        </div>
+      )}
 
       {concepts.length > 0 && (
         <div className="conceptModal">

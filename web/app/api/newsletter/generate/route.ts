@@ -31,34 +31,64 @@ export async function POST(req: NextRequest) {
     .order("published_at", { ascending: false })
     .limit(10);
 
-  const articleText = (articles ?? [])
+  if (!articles || articles.length === 0) {
+    return NextResponse.json(
+      { message: "수집된 기사가 없어 뉴스레터를 만들 수 없어요. 헤더의 새로고침으로 기사를 먼저 가져와 주세요." },
+      { status: 400 }
+    );
+  }
+
+  const articleText = articles
     .map((a) => `- ${a.title}\n  source: ${a.source}\n  url: ${a.url}\n  summary: ${a.summary ?? "없음"}`)
     .join("\n");
 
-  const openai = await getOpenAIForUser(body.userId);
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    stream: true,
-    messages: [
-      { role: "system", content: sector === "trend" ? trendPrompt : researchPrompt },
-      { role: "user", content: `다음 자료를 기반으로 뉴스레터를 작성해줘.\n\n${articleText}` }
-    ]
-  });
-
   let content = "";
-  for await (const chunk of completion) {
-    content += chunk.choices[0]?.delta?.content ?? "";
+  try {
+    const openai = await getOpenAIForUser(body.userId);
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      stream: true,
+      messages: [
+        { role: "system", content: sector === "trend" ? trendPrompt : researchPrompt },
+        { role: "user", content: `다음 자료를 기반으로 뉴스레터를 작성해줘.\n\n${articleText}` }
+      ]
+    });
+
+    for await (const chunk of completion) {
+      content += chunk.choices[0]?.delta?.content ?? "";
+    }
+  } catch (error) {
+    console.error("[newsletter-generate] openai failed", error);
+    return NextResponse.json(
+      { message: "AI 작성에 실패했어요. OpenAI 키 또는 네트워크 상태를 확인해 주세요." },
+      { status: 502 }
+    );
   }
 
-  const { data: inserted } = await supabaseAdmin
+  if (!content.trim()) {
+    return NextResponse.json(
+      { message: "AI가 빈 결과를 반환했어요. 잠시 후 다시 시도해 주세요." },
+      { status: 502 }
+    );
+  }
+
+  const { data: inserted, error: insertError } = await supabaseAdmin
     .from("newsletters")
     .insert({
       sector,
       content,
-      article_ids: (articles ?? []).map((a) => a.id)
+      article_ids: articles.map((a) => a.id)
     })
     .select("id")
     .single();
 
-  return NextResponse.json({ id: inserted?.id, content });
+  if (insertError || !inserted) {
+    console.error("[newsletter-generate] insert failed", insertError);
+    return NextResponse.json(
+      { message: "뉴스레터 저장에 실패했어요. Supabase 연결을 확인해 주세요." },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ id: inserted.id, content });
 }

@@ -11,9 +11,10 @@ type RefreshState = "idle" | "loading" | "success" | "error" | "cooldown";
 
 interface Props {
   onGenerateNewsletter: () => void;
+  newsletterLoading?: boolean;
 }
 
-export function Header({ onGenerateNewsletter }: Props) {
+export function Header({ onGenerateNewsletter, newsletterLoading }: Props) {
   const router = useRouter();
   const { sector, setSector } = useSectorStore();
   const [state, setState] = useState<RefreshState>("idle");
@@ -86,7 +87,13 @@ export function Header({ onGenerateNewsletter }: Props) {
             <RefreshCw size={20} className={state === "loading" ? "spin" : ""} />
           )}
         </button>
-        <button className="generateBtn" onClick={onGenerateNewsletter}>뉴스레터 만들기</button>
+        <button
+          className="generateBtn"
+          onClick={onGenerateNewsletter}
+          disabled={newsletterLoading}
+        >
+          {newsletterLoading ? "작성 중..." : "뉴스레터 만들기"}
+        </button>
         <button className="iconBtn"><User size={20} /></button>
       </div>
     </header>

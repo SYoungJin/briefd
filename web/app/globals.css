@@ -71,7 +71,18 @@ button, input, select { font: inherit; }
 .myCardsGrid { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 900px) { .myCardsGrid { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
 
-.conceptModal { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: grid; grid-template-columns: auto 1fr auto; align-items: center; padding: 20px; }
+.conceptModal { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: grid; grid-template-columns: auto 1fr auto; align-items: center; padding: 20px; z-index: 50; }
+.loadingCard { grid-column: 1 / -1; max-width: 420px; margin: 0 auto; background: #141418; border: 1px solid #23232D; border-radius: 12px; padding: 20px; text-align: center; }
+.loadingCard h3 { margin: 0 0 8px; }
+.loadingCard p { color: #9090A0; margin: 0 0 14px; }
+.progressBar { height: 6px; background: #1C1C22; border-radius: 999px; overflow: hidden; }
+.progressFill { width: 40%; height: 100%; background: #6366F1; animation: progressMove 1.4s ease-in-out infinite; }
+@keyframes progressMove {
+  0% { transform: translateX(-50%); }
+  50% { transform: translateX(80%); }
+  100% { transform: translateX(180%); }
+}
+.generateBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 .conceptWrap { width: 340px; margin: 0 auto; }
 .conceptCard {
   width: 340px; height: 480px; border: 0; background: transparent; perspective: 1000px; position: relative; cursor: pointer;
