@@ -44,11 +44,17 @@ export default function SettingsPage() {
       setStatusMessage(errorBody.message ?? "키가 유효하지 않아요");
       return;
     }
-    await fetch("/api/settings/apikey", {
+    const saveRes = await fetch("/api/settings/apikey", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, apiKey: cleanedKey })
     });
+    if (!saveRes.ok) {
+      const saveBody = (await saveRes.json().catch(() => ({}))) as { message?: string };
+      setStatus("error");
+      setStatusMessage(saveBody.message ?? "키 저장에 실패했어요");
+      return;
+    }
     setMasked(`${cleanedKey.slice(0, 3)}••••••••••••${cleanedKey.slice(-4)}`);
     setStatus("ok");
     setStatusMessage("연결됨");

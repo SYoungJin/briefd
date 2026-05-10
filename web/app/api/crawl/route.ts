@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, message: "로그인이 필요해요" }, { status: 401 });
   }
 
-  let result = { newCount: 0 };
+  let result: { newCount: number; failedFeeds?: string[] } = { newCount: 0 };
   if (sector === "research") {
     result = await crawlResearchSector();
   } else {
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     success: true,
     newCount: result.newCount,
+    failedFeeds: result.failedFeeds ?? [],
     totalToday: count ?? 0,
     crawledAt: new Date().toISOString()
   });
