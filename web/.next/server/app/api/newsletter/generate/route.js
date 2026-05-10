@@ -1,0 +1,15 @@
+"use strict";(()=>{var e={};e.id=149,e.ids=[149],e.modules={399:e=>{e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},517:e=>{e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},4770:e=>{e.exports=require("crypto")},8737:(e,t,r)=>{r.r(t),r.d(t,{originalPathname:()=>y,patchFetch:()=>h,requestAsyncStorage:()=>g,routeModule:()=>m,serverHooks:()=>w,staticGenerationAsyncStorage:()=>f});var s={};r.r(s),r.d(s,{POST:()=>d});var n=r(9303),a=r(8716),i=r(670),o=r(7070),u=r(4866),l=r(2632);let p=`당신은 UXUI 디자이너를 위한 테크 트렌드 에디터입니다.
+오늘의 주요 뉴스와 전시회 소식을 바탕으로
+UXUI 관점에서 의미 있는 내용만 추려 뉴스레터를 작성하세요.
+각 섹션은 ## 헤더로 구분하고, UXUI 디자이너에게
+실질적인 인사이트와 시사점을 포함해 주세요.
+한국어로 작성하세요.`,c=`당신은 HCI\xb7UXUI 연구를 쉽게 설명하는 리서치 에디터입니다.
+최신 논문들의 핵심 발견을 UXUI 실무자가 이해할 수 있는
+언어로 풀어 뉴스레터를 작성하세요.
+각 논문의 실무 적용 가능성을 반드시 포함하세요.
+한국어로 작성하세요.`;async function d(e){let t=await e.json().catch(()=>({})),r=t.sector??"trend",s=(0,l.t)();if(!s)return o.NextResponse.json({message:"Supabase not configured"},{status:500});let{data:n}=await s.from("articles").select("id,title,source,url,summary").eq("sector",r).order("published_at",{ascending:!1}).limit(10),a=(n??[]).map(e=>`- ${e.title}
+  source: ${e.source}
+  url: ${e.url}
+  summary: ${e.summary??"없음"}`).join("\n"),i=await (0,u.L)(t.userId),d=await i.chat.completions.create({model:"gpt-4o-mini",stream:!0,messages:[{role:"system",content:"trend"===r?p:c},{role:"user",content:`다음 자료를 기반으로 뉴스레터를 작성해줘.
+
+${a}`}]}),m="";for await(let e of d)m+=e.choices[0]?.delta?.content??"";let{data:g}=await s.from("newsletters").insert({sector:r,content:m,article_ids:(n??[]).map(e=>e.id)}).select("id").single();return o.NextResponse.json({id:g?.id,content:m})}let m=new n.AppRouteRouteModule({definition:{kind:a.x.APP_ROUTE,page:"/api/newsletter/generate/route",pathname:"/api/newsletter/generate",filename:"route",bundlePath:"app/api/newsletter/generate/route"},resolvedPagePath:"/Users/youngjinshin/Documents/UXPulse/web/app/api/newsletter/generate/route.ts",nextConfigOutput:"",userland:s}),{requestAsyncStorage:g,staticGenerationAsyncStorage:f,serverHooks:w}=m,y="/api/newsletter/generate/route";function h(){return(0,i.patchFetch)({serverHooks:w,staticGenerationAsyncStorage:f})}},4866:(e,t,r)=>{r.d(t,{L:()=>o});var s=r(6725),n=r.n(s),a=r(159),i=r(2632);async function o(e){let t=(0,i.t)();if(e&&t){let{data:r}=await t.from("user_settings").select("openai_key").eq("user_id",e).maybeSingle(),s=r?.openai_key;if(s){let e=function(e){let t=process.env.SETTINGS_ENCRYPT_SECRET??"";return n().AES.decrypt(e,t).toString(n().enc.Utf8)}(s);if(e)return new a.ZP({apiKey:e})}}return new a.ZP({apiKey:process.env.OPENAI_API_KEY})}},2632:(e,t,r)=>{r.d(t,{t:()=>i});var s=r(7933);let n="https://vdcslaybnteeoltfkqeb.supabase.co",a=process.env.SUPABASE_SERVICE_ROLE_KEY;function i(){return n&&a?(0,s.eI)(n,a,{auth:{autoRefreshToken:!1,persistSession:!1}}):null}}};var t=require("../../../../webpack-runtime.js");t.C(e);var r=e=>t(t.s=e),s=t.X(0,[276,370,972,159,725],()=>r(8737));module.exports=s})();

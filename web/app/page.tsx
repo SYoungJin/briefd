@@ -1,0 +1,160 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { CATEGORIES } from "@/lib/constants";
+import { Article, ConceptCardItem } from "@/lib/types";
+import { useSectorStore } from "@/store/sectorStore";
+import { Header } from "@/components/Header";
+import { ArticleCard } from "./components/ArticleCard";
+import { ConceptCard } from "@/components/ConceptCard";
+
+const MOCK: Article[] = [
+  {
+    id: 1,
+    title: "AI 기반 모빌리티 인터페이스가 운전 경험을 재정의한다",
+    url: "https://example.com/1",
+    source: "TechCrunch",
+    thumbnail: null,
+    published_at: new Date().toISOString(),
+    sector: "trend",
+    category: "모빌리티",
+    summary: null
+  }
+];
+
+export default function Page() {
+  const router = useRouter();
+  const { sector } = useSectorStore();
+  const [articles, setArticles] = useState<Article[]>(MOCK);
+  const [category, setCategory] = useState<string>("all");
+  const [loadingById, setLoadingById] = useState<Record<number, boolean>>({});
+  const [summaryVisibleById, setSummaryVisibleById] = useState<Record<number, boolean>>({});
+  const [concepts, setConcepts] = useState<ConceptCardItem[]>([]);
+  const [conceptIndex, setConceptIndex] = useState(0);
+
+  const filtered = useMemo(
+    () =>
+      articles.filter(
+        (a) => a.sector === sector && (category === "all" || a.category === category)
+      ),
+    [articles, sector, category]
+  );
+
+  useEffect(() => {
+    async function load() {
+      const res = await fetch(`/api/articles?sector=${sector}`);
+      if (!res.ok) return;
+      const data = (await res.json()) as { articles: Article[] };
+      if (data.articles.length > 0) {
+        setArticles(data.articles);
+      }
+    }
+    load();
+  }, [sector]);
+
+  async function handleSummarize(id: number) {
+    setLoadingById((prev) => ({ ...prev, [id]: true }));
+    const res = await fetch(`/api/articles/${id}/summarize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: "00000000-0000-0000-0000-000000000000" })
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { id: number; summary: string };
+      setArticles((prev) => prev.map((a) => (a.id === data.id ? { ...a, summary: data.summary } : a)));
+      setSummaryVisibleById((prev) => ({ ...prev, [id]: true }));
+    }
+    setLoadingById((prev) => ({ ...prev, [id]: false }));
+  }
+
+  async function handleGenerateNewsletter() {
+    const res = await fetch("/api/newsletter/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sector, userId: "00000000-0000-0000-0000-000000000000" })
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { id: number };
+    router.push(`/newsletter/${data.id}`);
+  }
+
+  async function handleExtractConcept(sourceText: string) {
+    const res = await fetch("/api/concepts/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sourceText, sourceType: "article", userId: "00000000-0000-0000-0000-000000000000" })
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { concepts: ConceptCardItem[] };
+    setConcepts(data.concepts ?? []);
+    setConceptIndex(0);
+  }
+
+  const hero = filtered[0];
+  const list = filtered.slice(1);
+
+  return (
+    <main className="briefdRoot">
+      <Header onGenerateNewsletter={handleGenerateNewsletter} />
+
+      <div className="layout">
+        <aside className="sidebar">
+          <h4>카테고리</h4>
+          <button className={category === "all" ? "chip active" : "chip"} onClick={() => setCategory("all")}>
+            전체
+          </button>
+          {CATEGORIES[sector].map((c) => (
+            <button key={c} className={category === c ? "chip active" : "chip"} onClick={() => setCategory(c)}>
+              {c}
+            </button>
+          ))}
+          <div className="savedCount">오늘 저장 카드: {concepts.length}</div>
+        </aside>
+
+        <section className="feedArea">
+          {hero && (
+            <article className="heroCard" onClick={() => window.open(hero.url, "_blank", "noopener,noreferrer")}>
+              <div>
+                <span className="badge">{hero.category}</span>
+                <h2>{hero.title}</h2>
+                <p>{hero.source}</p>
+              </div>
+            </article>
+          )}
+
+          <div className="feedGrid">
+            {list.map((item) => (
+              <ArticleCard
+                key={item.id}
+                article={item}
+                isLoading={Boolean(loadingById[item.id])}
+                summaryVisible={Boolean(summaryVisibleById[item.id])}
+                onToggleSummary={() =>
+                  setSummaryVisibleById((prev) => ({ ...prev, [item.id]: !prev[item.id] }))
+                }
+                onSummarize={() => handleSummarize(item.id)}
+                onExtractConcept={() => handleExtractConcept(item.title + "\n" + (item.summary ?? ""))}
+              />
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {concepts.length > 0 && (
+        <div className="conceptModal">
+          <button className="iconBtn" onClick={() => setConceptIndex((i) => Math.max(0, i - 1))}>
+            {"<"}
+          </button>
+          <ConceptCard item={concepts[conceptIndex]} onClose={() => setConcepts([])} />
+          <button
+            className="iconBtn"
+            onClick={() => setConceptIndex((i) => Math.min(concepts.length - 1, i + 1))}
+          >
+            {">"}
+          </button>
+        </div>
+      )}
+    </main>
+  );
+}

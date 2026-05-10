@@ -1,0 +1,47 @@
+{
+  "pages": {
+    "/_not-found/page": [
+      "static/chunks/webpack-c8441f2d519541e3.js",
+      "static/chunks/fd9d1056-99fd069f72f04521.js",
+      "static/chunks/117-2eba73dd79bce040.js",
+      "static/chunks/main-app-f42d70d61231d9d8.js",
+      "static/chunks/app/_not-found/page-acae3dcaf9796a55.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack-c8441f2d519541e3.js",
+      "static/chunks/fd9d1056-99fd069f72f04521.js",
+      "static/chunks/117-2eba73dd79bce040.js",
+      "static/chunks/main-app-f42d70d61231d9d8.js",
+      "static/css/f1deb89aa999864b.css",
+      "static/chunks/app/layout-60937a310c766cd1.js"
+    ],
+    "/my-cards/page": [
+      "static/chunks/webpack-c8441f2d519541e3.js",
+      "static/chunks/fd9d1056-99fd069f72f04521.js",
+      "static/chunks/117-2eba73dd79bce040.js",
+      "static/chunks/main-app-f42d70d61231d9d8.js",
+      "static/chunks/app/my-cards/page-4902b9aededd1e4d.js"
+    ],
+    "/newsletter/[id]/page": [
+      "static/chunks/webpack-c8441f2d519541e3.js",
+      "static/chunks/fd9d1056-99fd069f72f04521.js",
+      "static/chunks/117-2eba73dd79bce040.js",
+      "static/chunks/main-app-f42d70d61231d9d8.js",
+      "static/chunks/app/newsletter/[id]/page-2d1da7d1f967e63e.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-c8441f2d519541e3.js",
+      "static/chunks/fd9d1056-99fd069f72f04521.js",
+      "static/chunks/117-2eba73dd79bce040.js",
+      "static/chunks/main-app-f42d70d61231d9d8.js",
+      "static/chunks/app/page-c4e2325dec6f64cb.js"
+    ],
+    "/settings/page": [
+      "static/chunks/webpack-c8441f2d519541e3.js",
+      "static/chunks/fd9d1056-99fd069f72f04521.js",
+      "static/chunks/117-2eba73dd79bce040.js",
+      "static/chunks/main-app-f42d70d61231d9d8.js",
+      "static/chunks/app/settings/page-80e8b6e0170d3ca7.js"
+    ]
+  }
+}
