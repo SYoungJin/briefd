@@ -106,11 +106,11 @@ export function Header({ onGenerateNewsletter, newsletterLoading }: Props) {
         <button className="generateBtn" onClick={onGenerateNewsletter} disabled={newsletterLoading}>
           {newsletterLoading ? "작성 중..." : "뉴스레터 만들기"}
         </button>
-        <Link href="/mypage" className="iconBtn" aria-label="My page" title="My page">
-          <BookMarked size={20} />
-        </Link>
         <Link href="/settings" className="iconBtn" aria-label="Settings" title="설정">
           <Settings size={20} />
+        </Link>
+        <Link href="/mypage" className="iconBtn" aria-label="My page" title="My page">
+          <BookMarked size={20} />
         </Link>
       </div>
 

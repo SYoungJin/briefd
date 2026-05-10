@@ -79,7 +79,7 @@ export default function Page() {
         setNewsletterError(data.message ?? "뉴스레터 생성에 실패했어요. 잠시 후 다시 시도해 주세요.");
         return;
       }
-      router.push(`/newsletter/${data.id}`);
+      router.push(`/mypage?n=${data.id}`);
     } catch (error) {
       console.error(error);
       setNewsletterError("네트워크 오류로 뉴스레터를 만들 수 없어요.");
